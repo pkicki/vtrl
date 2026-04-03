@@ -3,6 +3,7 @@ import functools
 import gc
 import math
 import os
+os.environ.setdefault("XLA_FLAGS", "--xla_gpu_deterministic_ops=true")
 
 import jax
 import mujoco_playground
