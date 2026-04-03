@@ -1,33 +1,14 @@
 import datetime
 import functools
 import gc
-import math
 import os
-
-# Must be set before JAX is imported to guarantee deterministic GPU kernels.
-# XLA uses non-deterministic atomics/reductions by default on GPU; we append
-# the flag so we don't clobber any existing XLA_FLAGS the user may have set.
-_xla_flags = os.environ.get("XLA_FLAGS", "")
-if "--xla_gpu_deterministic_ops" not in _xla_flags:
-    os.environ["XLA_FLAGS"] = (_xla_flags + " --xla_gpu_deterministic_ops=true").strip()
-
 import jax
-
-# In newer JAX, jax_threefry_partitionable=True (the default) makes PRNG
-# output depend on the array's sharding/partition at runtime, which can vary
-# between runs even with the same seed.  Force it off for reproducibility.
-try:
-    jax.config.update("jax_threefry_partitionable", False)
-except AttributeError:
-    pass  # not present in this JAX version
-import mujoco_playground
 from mujoco_playground import registry, wrapper
 from mujoco_playground.config import dm_control_suite_params
 from brax.io import model
 from brax.training import acting
 from brax.training.agents.ppo import train as ppo
 from brax.training.agents.ppo import networks as ppo_networks
-import mediapy as media
 import wandb
 
 from experiment_launcher import single_experiment, run_experiment
