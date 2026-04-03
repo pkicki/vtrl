@@ -1,0 +1,8 @@
+.vscode/
+models/
+results/
+runs/
+videos/
+wandb/
+__pycache__/
+*.pyc
