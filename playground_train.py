@@ -25,7 +25,7 @@ def experiment(
     env_name: str = "CheetahRun",
     num_timesteps: int = 1_638_400,
     num_envs: int = 128,
-    batch_size: int = 128,
+    batch_size: int = 512,
     unroll_length: int = 32,
     num_minibatches: int = 4,
     train_action_repeat: int = 1,
@@ -104,7 +104,7 @@ def experiment(
     }
 
     print(f"Starting training (this will JIT compile first, which takes a minute)...")
-    group_name = f"{datetime.datetime.now().strftime('%m%d-%H%M')}_ar{train_action_repeat}_ear{eval_action_repeat}_bs{batch_size}"
+    group_name = f"{datetime.datetime.now().strftime('%y%m%d')}_ar{train_action_repeat}_ear{eval_action_repeat}_bs{batch_size}"
     wandb.init(
         project=f"playground_{env_name.lower()}_ppo",
         group=group_name,
