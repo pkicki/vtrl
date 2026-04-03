@@ -104,9 +104,11 @@ def experiment(
     }
 
     print(f"Starting training (this will JIT compile first, which takes a minute)...")
+    group_name = f"{datetime.datetime.now().strftime('%m%d-%H%M')}_ar{train_action_repeat}_ear{eval_action_repeat}_bs{batch_size}"
     wandb.init(
         project=f"playground_{env_name.lower()}_ppo",
-        name=f"{env_name}_{datetime.datetime.now().strftime('%m%d-%H%M')}_ar{train_action_repeat}_bs{batch_size}",
+        group=group_name,
+        name=f"{group_name}_seed{seed}",
         config=ppo_params.to_dict()
     )
 
@@ -189,8 +191,7 @@ def experiment(
     jax.clear_caches()  # Free XLA compilation caches to reclaim GPU memory
 
     # 4. Record final deterministic evaluation video.
-    run_name = f"{env_name}_{datetime.datetime.now().strftime('%m%d-%H%M')}_ar{train_action_repeat}_bs{batch_size}_seed{seed}"
-    video_path = os.path.join("videos", run_name, "final_eval.mp4")
+    video_path = os.path.join("videos", env_name, group_name, f"final_eval_seed{seed}.mp4")
     os.makedirs(os.path.dirname(video_path), exist_ok=True)
     saved_video = record_final_evaluation_video(
         make_inference_fn=make_inference_fn,
@@ -207,8 +208,9 @@ def experiment(
         wandb.log({"final_eval/video": wandb.Video(saved_video, format="mp4")})
 
     # 5. Save the policy
-    model.save_params("cheetah_params", params)
-    print("Model saved to 'cheetah_params'")
+    save_path = os.path.join("models", env_name, group_name, f"params_seed{seed}.pt")
+    model.save_params(save_path, params)
+    print(f"Model saved to {save_path}")
 
 if __name__ == "__main__":
     run_experiment(experiment)
