@@ -29,11 +29,30 @@ def experiment(
     num_eval_envs: int = 64,
     num_resets_per_eval: int = 0,
     gamma: float = 0.995,
+    gae_lambda: float = 0.95,
     results_dir: str = "results",
     seed: int = 444,
 ):
+    gamma_base = gamma  # original single-step discount, before action repeat scaling
     gamma = gamma ** train_action_repeat  # Adjust gamma for action repeat
     unroll_length = int(32 / train_action_repeat) # Keep total unroll length constant regardless of action repeat
+
+    # When action_repeat > 1 both gamma and unroll_length change, so we must
+    # recompute gae_lambda to preserve the same effective GAE horizon as the
+    # base case (action_repeat=1):
+    #   H_eff = 1 / (1 - gamma_base * gae_lambda)           [base-case horizon]
+    #   lambda_new = (1 - 1/H_eff) / gamma_adjusted          [solve for new lambda]
+    # Then clamp so H_eff <= unroll_length (can't bootstrap beyond the rollout).
+    if train_action_repeat > 1:
+        h_eff_base = 1.0 / (1.0 - gamma_base * gae_lambda)
+        gae_lambda_max = (1.0 - 1.0 / unroll_length) / gamma if unroll_length > 1 else 0.0
+        gae_lambda_target = (1.0 - 1.0 / h_eff_base) / gamma
+        gae_lambda = min(gae_lambda_target, gae_lambda_max)
+        print(
+            f"GAE lambda adjusted to {gae_lambda:.4f} "
+            f"(base H_eff={h_eff_base:.1f} steps, "
+            f"unroll_length={unroll_length}, gamma={gamma:.4f})"
+        )
 
 
     print(f"Loading environment: {env_name}")
@@ -158,6 +177,7 @@ def experiment(
         ppo.train,
         **ppo_params,
         network_factory=network_factory,
+        gae_lambda=gae_lambda,
         seed=seed,
         environment=env,
         progress_fn=progress,
