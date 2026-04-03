@@ -4,6 +4,7 @@ import gc
 import math
 import os
 os.environ.setdefault("XLA_FLAGS", "--xla_gpu_deterministic_ops=true")
+os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
 
 import jax
 import mujoco_playground
