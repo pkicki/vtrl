@@ -1,0 +1,39 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Example configuration file for ppo_continuous_action.py
+#
+# Usage:
+#   python ppo_continuous_action.py --config config_example.yaml
+#   python ppo_continuous_action.py --config config_example.yaml --seed 7
+#
+# All values here become the new defaults.  Any flag passed on the command line
+# still takes precedence over what is written in this file.
+# ──────────────────────────────────────────────────────────────────────────────
+
+# ── Bookkeeping ────────────────────────────────────────────────────────────────
+exp_name: half_cheetah
+seed: 444
+
+# ── Logging & tracking ─────────────────────────────────────────────────────────
+track: true
+wandb_project_name: vtrl_half_cheetah
+# wandb_entity: null          # set to your W&B username / org when track: true
+save_model: true
+record_video_enabled: false
+#record_video_enabled: true
+
+# ── Environment ────────────────────────────────────────────────────────────────
+env_id: HalfCheetah-v4
+
+# ── PPO hyper-parameters ───────────────────────────────────────────────────────
+
+total_timesteps: 1_000_000
+frame_skip: 5
+num_steps: 512
+gamma: 0.98
+
+learning_rate: 2.0e-5
+num_envs: 4
+gae_lambda: 0.92
+clip_coef: 0.1
+eval_episodes: 10
+ent_coef: 0.0004

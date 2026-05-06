@@ -1,0 +1,40 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Example configuration file for ppo_continuous_action.py
+#
+# Usage:
+#   python ppo_continuous_action.py --config config_example.yaml
+#   python ppo_continuous_action.py --config config_example.yaml --seed 7
+#
+# All values here become the new defaults.  Any flag passed on the command line
+# still takes precedence over what is written in this file.
+# ──────────────────────────────────────────────────────────────────────────────
+
+# ── Bookkeeping ────────────────────────────────────────────────────────────────
+exp_name: myhopper
+seed: 444
+
+# ── Logging & tracking ─────────────────────────────────────────────────────────
+track: true
+wandb_project_name: vtrl_myhopper
+# wandb_entity: null          # set to your W&B username / org when track: true
+save_model: true
+record_video_enabled: false
+#record_video_enabled: true
+
+# ── Environment ────────────────────────────────────────────────────────────────
+env_id: MyHopper
+
+# ── PPO hyper-parameters ───────────────────────────────────────────────────────
+
+total_timesteps: 10_000_000
+dt: 0.01
+frame_skip: 5
+num_steps: 16
+gamma: 0.997
+
+learning_rate: 5.0e-4
+num_envs: 1024
+gae_lambda: 0.95
+clip_coef: 0.1
+eval_episodes: 10
+ent_coef: 0.0004

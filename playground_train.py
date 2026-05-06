@@ -4,7 +4,7 @@ import gc
 import os
 import jax
 from mujoco_playground import registry, wrapper
-from mujoco_playground.config import dm_control_suite_params
+from mujoco_playground.config import dm_control_suite_params, locomotion_params
 from brax.io import model
 from brax.training import acting
 from brax.training.agents.ppo import train as ppo
@@ -18,7 +18,8 @@ from utils.render import record_final_evaluation_video
 
 @single_experiment
 def experiment(
-    env_name: str = "CheetahRun",
+    env_name: str = "Go1JoystickFlatTerrain",
+    #env_name: str = "CheetahRun",
     num_timesteps: int = 1_638_400,
     num_envs: int = 128,
     batch_size: int = 512,
@@ -65,7 +66,14 @@ def experiment(
     env_cfg = registry.get_default_config(env_name)
     env = registry.load(env_name, config=env_cfg)
 
-    ppo_params = dm_control_suite_params.brax_ppo_config(env_name, impl="jax")
+    _LOCOMOTION_ENVS = (
+        "Go1JoystickFlatTerrain", "Go1JoystickRoughTerrain",
+        "Go1Handstand", "Go1Footstand", "Go1Backflip", "Go1Getup",
+    )
+    if env_name in _LOCOMOTION_ENVS:
+        ppo_params = locomotion_params.brax_ppo_config(env_name)
+    else:
+        ppo_params = dm_control_suite_params.brax_ppo_config(env_name, impl="jax")
     
     ppo_params.num_envs = num_envs # 512 is safe for 6GB VRAM
     ppo_params.batch_size = batch_size
@@ -127,11 +135,13 @@ def experiment(
         config=ppo_params.to_dict()
     )
 
+    net_cfg = getattr(ppo_params, "network_factory", None)
     network_factory = functools.partial(
         ppo_networks.make_ppo_networks,
-        policy_hidden_layer_sizes=(128, 128), # Standard for Cheetah
-        policy_obs_key="state",
-        value_obs_key="state"
+        policy_hidden_layer_sizes=tuple(net_cfg.policy_hidden_layer_sizes) if net_cfg else (128, 128),
+        value_hidden_layer_sizes=tuple(net_cfg.value_hidden_layer_sizes) if net_cfg and hasattr(net_cfg, "value_hidden_layer_sizes") else (256, 256),
+        policy_obs_key=net_cfg.policy_obs_key if net_cfg else "state",
+        value_obs_key=net_cfg.value_obs_key if net_cfg else "state",
     )
 
     def progress(num_steps, metrics):
